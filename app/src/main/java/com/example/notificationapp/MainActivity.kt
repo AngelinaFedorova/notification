@@ -28,9 +28,9 @@ class MainActivity : AppCompatActivity() {
         notificationManager = NotificationManagerCompat.from(this)
         editTextTitle = findViewById(R.id.edit_text_title)
         editTextMessage = findViewById(R.id.edit_text_message)
-        MESSAGES.add(Message("Good morning!", "Jim"))
+        MESSAGES.add(Message("Good morning!", null))
         MESSAGES.add(Message("Hello", null))
-        MESSAGES.add(Message("Hi!", "Jenny"))
+        MESSAGES.add(Message("Hi!", null))
     }
 
     fun sendOnChannel1(v: View?) {
@@ -39,21 +39,22 @@ class MainActivity : AppCompatActivity() {
 
     fun sendOnChannel2(v: View?) {
         val title1 = "Title 1"
-        val message1 = "Message 1"
+        val message1 = "Message 1 ${System.currentTimeMillis()}"
         val title2 = "Title 2"
         val message2 = "Message 2"
-        val notification1: Notification = NotificationCompat.Builder(this, CHANNEL_2_ID)
+        val notification1: Notification = NotificationCompat.Builder(this, CHANNEL_1_ID)
             .setSmallIcon(R.drawable.ic_two)
             .setContentTitle(title1)
             .setContentText(message1)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            //.setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setGroup("example_group")
             .build()
         val notification2: Notification = NotificationCompat.Builder(this, CHANNEL_2_ID)
             .setSmallIcon(R.drawable.ic_two)
             .setContentTitle(title2)
             .setContentText(message2)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setGroup("example_group")
             .build()
         val summaryNotification: Notification = NotificationCompat.Builder(this, CHANNEL_2_ID)
@@ -65,17 +66,16 @@ class MainActivity : AppCompatActivity() {
                     .setBigContentTitle("2 new messages")
                     .setSummaryText("user@example.com")
             )
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setGroup("example_group")
             .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
             .setGroupSummary(true)
             .build()
-        SystemClock.sleep(2000)
         notificationManager?.notify(2, notification1)
-        SystemClock.sleep(2000)
-        notificationManager?.notify(3, notification2)
-        SystemClock.sleep(2000)
-        notificationManager?.notify(4, summaryNotification)
+        SystemClock.sleep(10000)
+        sendOnChannel2(v)
+//        notificationManager?.notify(3, notification2)
+//        notificationManager?.notify(4, summaryNotification)
     }
 
     companion object {
@@ -84,7 +84,7 @@ class MainActivity : AppCompatActivity() {
             val activityIntent = Intent(context, MainActivity::class.java)
             val contentIntent = PendingIntent.getActivity(
                 context,
-                0, activityIntent, 0
+                0, activityIntent, PendingIntent.FLAG_MUTABLE
             )
             val remoteInput: RemoteInput = RemoteInput.Builder("key_text_reply")
                 .setLabel("Your answer...")
@@ -95,7 +95,7 @@ class MainActivity : AppCompatActivity() {
                 replyIntent = Intent(context, DirectReplyReceiver::class.java)
                 replyPendingIntent = PendingIntent.getBroadcast(
                     context,
-                    0, replyIntent, 0
+                    0, replyIntent,  PendingIntent.FLAG_MUTABLE
                 )
             } else {
                 //start chat activity instead (PendingIntent.getActivity)
@@ -130,6 +130,9 @@ class MainActivity : AppCompatActivity() {
                 .build()
             val notificationManager = NotificationManagerCompat.from(context)
             notificationManager.notify(1, notification)
+            MESSAGES.add(Message("${System.currentTimeMillis()}", null ))
+            SystemClock.sleep(2000)
+            sendChannel1Notification(context)
         }
     }
 }
