@@ -13,9 +13,12 @@ import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.app.Person
 import androidx.core.app.RemoteInput
 import com.example.notificationapp.App.Companion.CHANNEL_1_ID
 import com.example.notificationapp.App.Companion.CHANNEL_2_ID
+import java.util.*
+import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity() {
     private var notificationManager: NotificationManagerCompat? = null
@@ -42,12 +45,18 @@ class MainActivity : AppCompatActivity() {
         val message1 = "Message 1 ${System.currentTimeMillis()}"
         val title2 = "Title 2"
         val message2 = "Message 2"
+        val activityIntent = Intent(this, MainActivity::class.java)
+        val contentIntent = PendingIntent.getActivity(
+            this,
+            0, activityIntent,  PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+        )
         val notification1: Notification = NotificationCompat.Builder(this, CHANNEL_1_ID)
             .setSmallIcon(R.drawable.ic_two)
             .setContentTitle(title1)
             .setContentText(message1)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            //.setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            .setContentIntent(contentIntent)
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setGroup("example_group")
             .build()
         val notification2: Notification = NotificationCompat.Builder(this, CHANNEL_2_ID)
@@ -81,10 +90,20 @@ class MainActivity : AppCompatActivity() {
     companion object {
         var MESSAGES: MutableList<Message> = ArrayList()
         fun sendChannel1Notification(context: Context) {
+            val notificationManager = NotificationManagerCompat.from(context)
+            val notification1: Notification = NotificationCompat.Builder(context, CHANNEL_1_ID)
+                .setSmallIcon(R.drawable.ic_two)
+                .setContentTitle("")
+                .setContentText("")
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                .build()
+            notificationManager.notify(1, notification1)
+
             val activityIntent = Intent(context, MainActivity::class.java)
             val contentIntent = PendingIntent.getActivity(
                 context,
-                0, activityIntent, PendingIntent.FLAG_MUTABLE
+                0, activityIntent,   PendingIntent.FLAG_MUTABLE
             )
             val remoteInput: RemoteInput = RemoteInput.Builder("key_text_reply")
                 .setLabel("Your answer...")
@@ -107,16 +126,18 @@ class MainActivity : AppCompatActivity() {
                 replyPendingIntent
             ).addRemoteInput(remoteInput).build()
             val messagingStyle = NotificationCompat.MessagingStyle("Me")
+            messagingStyle.setGroupConversation(true)
             messagingStyle.conversationTitle = "Group Chat"
             for (chatMessage in MESSAGES) {
                 val notificationMessage: NotificationCompat.MessagingStyle.Message =
                     NotificationCompat.MessagingStyle.Message(
-                        chatMessage.text,
-                        chatMessage.timestamp,
-                        chatMessage.sender
+                         "${chatMessage.text}${System.currentTimeMillis()}",
+                        System.currentTimeMillis(),
+                        Person.Builder().setName("test").setImportant(true).build()
                     )
                 messagingStyle.addMessage(notificationMessage)
             }
+
             val notification: Notification = NotificationCompat.Builder(context, CHANNEL_1_ID)
                 .setSmallIcon(R.drawable.ic_one)
                 .setStyle(messagingStyle)
@@ -125,13 +146,18 @@ class MainActivity : AppCompatActivity() {
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(NotificationCompat.CATEGORY_MESSAGE)
                 .setContentIntent(contentIntent)
-                .setAutoCancel(true)
+                //.setAutoCancel(true)
+                .setSortKey((Long.MAX_VALUE - Date().time).toString())
                 .setOnlyAlertOnce(true)
+                .setAutoCancel(true)
+                .setWhen(Date().time)
+                .setShowWhen(true)
+                .setContentText("PFFF${System.currentTimeMillis()}")
                 .build()
-            val notificationManager = NotificationManagerCompat.from(context)
+            //notificationManager.cancel(1)
             notificationManager.notify(1, notification)
             MESSAGES.add(Message("${System.currentTimeMillis()}", null ))
-            SystemClock.sleep(2000)
+            SystemClock.sleep(6000)
             sendChannel1Notification(context)
         }
     }

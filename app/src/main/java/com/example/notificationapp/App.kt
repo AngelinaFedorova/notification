@@ -34,7 +34,7 @@ class App : Application() {
     }
 
     companion object {
-        const val CHANNEL_1_ID = "channel1"
+        const val CHANNEL_1_ID = "channel3"
         const val CHANNEL_2_ID = "channel2"
     }
 }
